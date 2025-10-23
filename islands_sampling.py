@@ -79,7 +79,8 @@ class IslandsSampler:
         houses_to_select = min(self.houses_per_village, len(available_houses))
         
         # STAGE 1 RANDOM SELECTION: Select houses using village-specific seed
-        random.seed(self.random_seed + hash(village))
+        village_seeds = {'Vardo': 1, 'Colmar': 2, 'Arcadia': 3}
+        random.seed(self.random_seed + village_seeds.get(village, 0))
         selected_houses = random.sample(available_houses, houses_to_select)
         self.selected_houses[village] = selected_houses
         
@@ -159,7 +160,6 @@ class IslandsSampler:
         
         # Stage 2: Random selection within each house
         stage2_participants = []
-        random.seed(self.random_seed + hash(village) + 100)  # Different seed for Stage 2
         
         for house, people in house_groups.items():
             if len(people) == 1:
@@ -170,6 +170,10 @@ class IslandsSampler:
             else:
                 # Multiple people - randomly select (could select all or subset based on needs)
                 # For this study, we'll select all adults but in random order
+                # Set deterministic seed for each house to ensure reproducibility
+                village_seeds = {'Vardo': 1, 'Colmar': 2, 'Arcadia': 3}
+                house_seed = int(str(house).replace('House ', '').replace('#', '')) if isinstance(house, str) else house
+                random.seed(self.random_seed + village_seeds.get(village, 0) * 1000 + house_seed + 100)
                 random.shuffle(people)
                 for person in people:
                     person['selected_in_stage2'] = True
@@ -178,6 +182,8 @@ class IslandsSampler:
                 print(f"  {house}: {', '.join(names)} (randomized order)")
         
         # Final randomization of the complete list for contact order
+        village_seeds = {'Vardo': 1, 'Colmar': 2, 'Arcadia': 3}
+        random.seed(self.random_seed + village_seeds.get(village, 0) * 10000 + 200)  # Separate seed for final ordering
         random.shuffle(stage2_participants)
         
         print(f"\n=== FINAL TWO-STAGE SAMPLING ORDER FOR {village.upper()} ===")
@@ -306,7 +312,8 @@ def generate_random_sampling_numbers(village, random_seed=42, target_participant
     print("="*60)
     
     # Set village-specific seed for reproducibility
-    random.seed(random_seed + hash(village))
+    village_seeds = {'Vardo': 1, 'Colmar': 2, 'Arcadia': 3}
+    random.seed(random_seed + village_seeds.get(village, 0))
     
     # Stage 1: Random house numbers from actual village house range
     max_house_number = village_info['houses']
@@ -321,7 +328,11 @@ def generate_random_sampling_numbers(village, random_seed=42, target_participant
     # Stage 2: Random adult numbers within each house
     print(f"\nSTAGE 2 - Random Adult Numbers (per house):")
     
-    for house in selected_houses:
+    for i, house in enumerate(selected_houses):
+        # Set deterministic seed for each house to ensure reproducibility
+        village_seeds = {'Vardo': 1, 'Colmar': 2, 'Arcadia': 3}
+        random.seed(random_seed + village_seeds.get(village, 0) * 1000 + house)
+        
         # Generate realistic number of adults per house
         num_adults = random.choices([1, 2, 3, 4], weights=[25, 40, 25, 10])[0]
             
