@@ -264,51 +264,34 @@ VILLAGE_DATA = {
     'Arcadia': {'houses': 2101, 'population': 5308}
 }
 
-def calculate_sampling_strategy(village, target_participants=20, response_rate=0.65):
+def calculate_sampling_strategy(village, target_participants=20, houses_to_sample=15):
     """
-    Calculate optimal number of houses to sample based on village demographics
+    Calculate sampling strategy based on fixed number of houses to sample
     
     Args:
         village: Village name
         target_participants: Target number of participants (default 20)
-        response_rate: Expected response rate (ASSUMPTION - adjust based on literature)
+        houses_to_sample: Number of houses to sample (default 15)
     
     Returns:
-        Tuple of (houses_to_sample, avg_adults_per_house)
-    
-    Note: Response rate is an assumption. For your methodology, you should:
-    - Research actual response rates for similar mobility/health studies
-    - Consider factors like: rural vs urban, study topic, incentives, etc.
-    - Pilot test with a few houses to estimate actual response rate
+        Number of houses to sample
     """
-    village_info = VILLAGE_DATA[village]
-    total_houses = village_info['houses']
-    total_population = village_info['population']
-    
-    # Calculate average adults per house
-    avg_adults_per_house = total_population / total_houses
-    
-    # Calculate houses needed accounting for response rate
-    participants_needed = target_participants / response_rate
-    houses_needed = int(participants_needed / avg_adults_per_house) + 2  # +2 buffer
-    
-    return houses_needed, avg_adults_per_house
+    return houses_to_sample
 
 def generate_random_sampling_numbers(village, random_seed=42, target_participants=20):
     """
-    Demographically-informed two-stage random sampling
+    Two-stage random sampling
     
     Stage 1: Generate random house numbers based on actual village size
-    Stage 2: Generate random adult numbers based on demographic averages
+    Stage 2: Generate random adult numbers within each house
     """
     village_info = VILLAGE_DATA[village]
-    houses_to_sample, avg_adults = calculate_sampling_strategy(village, target_participants)
+    houses_to_sample = calculate_sampling_strategy(village, target_participants)
     
     print(f"\n🎲 TWO-STAGE RANDOM SAMPLING for {village.upper()}")
     print("="*60)
     print(f"Village Stats: {village_info['houses']} houses, {village_info['population']} people")
-    print(f"Average adults per house: {avg_adults:.1f}")
-    print(f"Houses to sample: {houses_to_sample} (for 20 participants at 65% response rate)")
+    print(f"Houses to sample: {houses_to_sample}")
     print("="*60)
     
     # Set village-specific seed for reproducibility
@@ -324,18 +307,12 @@ def generate_random_sampling_numbers(village, random_seed=42, target_participant
     print(f"Selected {len(selected_houses)} houses from {max_house_number} total houses")
     print(f"Houses: {selected_houses}")
     
-    # Stage 2: Random adult numbers within each house (based on demographics)
+    # Stage 2: Random adult numbers within each house
     print(f"\nSTAGE 2 - Random Adult Numbers (per house):")
-    max_adults = max(1, int(avg_adults * 2))  # Cap at 2x average for realism
     
     for house in selected_houses:
-        # Generate realistic number of adults based on village average
-        if avg_adults < 2:
-            num_adults = random.choices([1, 2, 3], weights=[50, 35, 15])[0]
-        elif avg_adults < 3:
-            num_adults = random.choices([1, 2, 3, 4], weights=[20, 40, 30, 10])[0]
-        else:
-            num_adults = random.choices([2, 3, 4, 5], weights=[30, 35, 25, 10])[0]
+        # Generate realistic number of adults per house
+        num_adults = random.choices([1, 2, 3, 4], weights=[25, 40, 25, 10])[0]
             
         adult_numbers = list(range(1, num_adults + 1))
         random.shuffle(adult_numbers)  # Randomize contact order
@@ -349,17 +326,14 @@ def generate_real_sampling_plan():
     print("🏝️  ISLAND MOBILITY STUDY - DEMOGRAPHICALLY-INFORMED TWO-STAGE SAMPLING")
     print("="*80)
     print("Target: 20 participants per village")
-    print("Response Rate Assumption: 65% (ESTIMATED - needs literature review)")
-    print("Methodology: Two-Stage Cluster Sampling with demographic weighting")
-    print("⚠️  NOTE: You should research actual response rates for similar studies")
+    print("Methodology: Two-Stage Cluster Sampling")
     print("="*80)
     
-    # Calculate and show demographics summary
-    print("\n📊 VILLAGE DEMOGRAPHICS:")
+    # Show village information
+    print("\n📊 VILLAGE INFORMATION:")
     for village in ['Vardo', 'Colmar', 'Arcadia']:
         data = VILLAGE_DATA[village]
-        avg_people = data['population'] / data['houses']
-        print(f"{village}: {data['houses']} houses, {data['population']} people ({avg_people:.1f} people/house)")
+        print(f"{village}: {data['houses']} houses, {data['population']} total population")
     
     # Generate sampling plan for each village
     for village in ['Vardo', 'Colmar', 'Arcadia']:
@@ -374,8 +348,8 @@ def generate_real_sampling_plan():
     print("5. If house doesn't exist, skip to next house")
     print("\n🎯 Goal: Collect 20 participants × 3 villages = 60 total participants")
     print("\n📈 STATISTICAL JUSTIFICATION:")
-    print("Sample sizes calculated using village demographics and expected 65% response rate")
     print("House numbers selected randomly from actual village housing stock")
+    print("Adults within houses selected randomly to ensure unbiased sampling")
 
 if __name__ == "__main__":
     # Generate real sampling plan for data collection
