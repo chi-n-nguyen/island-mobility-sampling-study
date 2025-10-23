@@ -17,6 +17,10 @@ class IslandsSampler:
     3. PRACTICAL: Works within constraints of limited interface navigation
     4. BIAS REDUCTION: Prevents systematic bias that could occur with convenience sampling
     5. REPRESENTATIVENESS: Ensures coverage across different household types and locations
+    6. BUFFER STRATEGY: Samples 20 houses to target 20 participants, accounting for:
+       - Houses with only one adult (limited options)
+       - Participant refusals or non-consent
+       - Households where no eligible adults are available
     
     This approach is superior to simple random sampling in clustered populations because:
     - It accounts for natural clustering of individuals within households
@@ -24,10 +28,10 @@ class IslandsSampler:
     - Reduces travel/navigation time between sampling units
     """
     
-    def __init__(self, random_seed=42, houses_per_village=15):
+    def __init__(self, random_seed=42, houses_per_village=20):
         self.villages = ['Vardo', 'Colmar', 'Arcadia']
         self.target_per_village = 20
-        self.houses_per_village = houses_per_village  # Stage 1: Number of houses to select
+        self.houses_per_village = houses_per_village  # Stage 1: Number of houses to select (buffer for refusals/single-adult houses)
         self.participants = []
         self.potential_participants = {}
         self.selected_houses = {}  # Track which houses were selected in Stage 1
@@ -264,14 +268,21 @@ VILLAGE_DATA = {
     'Arcadia': {'houses': 2101, 'population': 5308}
 }
 
-def calculate_sampling_strategy(village, target_participants=20, houses_to_sample=15):
+def calculate_sampling_strategy(village, target_participants=20, houses_to_sample=20):
     """
-    Calculate sampling strategy based on fixed number of houses to sample
+    Calculate sampling strategy with buffer for refusals and single-adult households
+    
+    BUFFER RATIONALE:
+    - Target: 20 participants per village
+    - Houses sampled: 20 (1:1 ratio provides buffer)
+    - Accounts for houses with only one adult
+    - Accounts for participant refusals/non-consent
+    - Ensures sufficient sampling pool to reach target
     
     Args:
         village: Village name
         target_participants: Target number of participants (default 20)
-        houses_to_sample: Number of houses to sample (default 15)
+        houses_to_sample: Number of houses to sample (default 20, includes buffer)
     
     Returns:
         Number of houses to sample
